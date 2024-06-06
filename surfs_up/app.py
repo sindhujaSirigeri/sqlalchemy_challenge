@@ -56,9 +56,19 @@ def home():
 def precipitation():
     session = Session(engine)
     
+    # Find the latest date in the dataset
+    latest_date = session.query(Measurement.date).order_by(Measurement.date.desc()).first().date
+    # Calculate the date one year ago from the latest date
+    one_year_ago = pd.to_datetime(latest_date) - pd.DateOffset(years=1)
+    
     # Query the last 12 months of precipitation data
-    prcp_data = session.query(Measurement.date, Measurement.prcp).all()
+    prcp_data = session.query(Measurement.date, Measurement.prcp)\
+                       .filter(Measurement.date >= one_year_ago.strftime('%Y-%m-%d')).all()
+    
+    # Convert the query results to a dictionary
     dict_prcp = dict(prcp_data)
+    
+    
     session.close()
     return jsonify(dict_prcp)
 
